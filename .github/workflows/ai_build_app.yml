@@ -15,14 +15,37 @@ jobs:
           submodules: recursive
           fetch-depth: 0
 
-      - name: Set up Java 17
+      - name: Set up Java 17 with Gradle Cache
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
+          cache: 'gradle'
+
+      - name: Cache Android NDK
+        uses: actions/cache@v4
+        id: ndk-cache
+        with:
+          path: /usr/local/lib/android/sdk/ndk/27.2.12479018
+          key: ${{ runner.os }}-ndk-27.2.12479018
 
       - name: Set up Android SDK & NDK
         uses: android-actions/setup-android@v3
+
+      - name: Cache C++ Build Objects (ccache)
+        uses: actions/cache@v4
+        with:
+          path: ~/.ccache
+          key: ${{ runner.os }}-ccache-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-ccache-
+
+      - name: Install & Enable ccache
+        run: |
+          sudo apt-get update && sudo apt-get install -y ccache
+          echo "CCACHE_DIR=$HOME/.ccache" >> $GITHUB_ENV
+          echo "CCACHE_MAXSIZE=1G" >> $GITHUB_ENV
+          ccache -s
 
       - name: Grant Execute Permission to Gradle
         run: chmod +x android/launcher/gradlew
@@ -31,6 +54,9 @@ jobs:
         run: |
           cd android/launcher
           ./gradlew assembleDebug --stacktrace --parallel --max-workers=$(nproc)
+
+      - name: Show ccache Statistics
+        run: ccache -s
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
