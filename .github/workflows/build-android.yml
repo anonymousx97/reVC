@@ -1,19 +1,6 @@
 name: reVC Android
 
 on:
-  push:
-    branches: [ "miami" ]
-    paths:
-      - 'android/launcher/**'
-      - 'src/**'
-  pull_request:
-    branches: [ "miami" ]
-    paths:
-      - 'android/launcher/**'
-      - 'src/**'
-  release:
-    types: published 
-
   workflow_dispatch:
 
 permissions:
