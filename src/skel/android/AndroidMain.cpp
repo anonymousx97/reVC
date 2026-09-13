@@ -2,10 +2,12 @@
 // Created by mrxenginner on 13/07/2025.
 //
 
-#if defined ANDROID
 #include <unistd.h>
 #include <sys/stat.h>
 #include <SDL_system.h>
+
+#if defined ANDROID
+
 #include "AndroidMain.h"
 #include "JavaWrapper.h"
 #include "logger/log.h"
