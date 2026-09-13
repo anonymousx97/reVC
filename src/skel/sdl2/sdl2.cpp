@@ -247,8 +247,8 @@ psNativeTextureSupport(void)
 static void _psInitializeVibration() {}
 static void _psHandleVibration() {}
 
-/*
- *****************************************************************************
+/* 
+ ***************************************************************************** 
  */
 RwBool
 psInitialize(void)
@@ -1278,8 +1278,34 @@ windowIconifyCB(int iconified) {
     WindowIconified = !!iconified;
 }
 
+static void UpdateRelativeMouseMode()
+{
+	if (FrontEndMenuManager.m_bMenuActive || CTimer::GetIsPaused()) {
+		if (SDL_GetRelativeMouseMode()) {
+			SDL_SetRelativeMouseMode(SDL_FALSE);
+			SDL_ShowCursor(SDL_ENABLE);
+		}
+	} else {
+		if (!SDL_GetRelativeMouseMode()) {
+			SDL_SetRelativeMouseMode(SDL_TRUE);
+			SDL_ShowCursor(SDL_DISABLE);
+		}
+	}
+}
+
 void inputEventHandler() {
     SDL_Event event;
+
+    static bool bHintsInitialised = false;
+	if (!bHintsInitialised) {
+		SDL_SetHint(SDL_HINT_TOUCH_MOUSE_EVENTS, "0");
+		SDL_SetHint(SDL_HINT_MOUSE_TOUCH_EVENTS, "0");
+		SDL_SetHint(SDL_HINT_ANDROID_SEPARATE_MOUSE_AND_TOUCH, "1");
+		SDL_SetHint(SDL_HINT_MOUSE_RELATIVE_MODE_WARP, "0");
+		bHintsInitialised = true;
+	}
+
+	UpdateRelativeMouseMode();
 
     if (SDL_PollEvent(&event)) {
         switch (event.type) {
@@ -1308,6 +1334,44 @@ void inputEventHandler() {
                     case SDL_WINDOWEVENT_HIDDEN: windowIconifyCB(true); break;
                 }
                 break;
+
+            case SDL_MOUSEMOTION:
+			if (SDL_GetRelativeMouseMode()) {
+				CPad::NewMouseControllerState.x += event.motion.xrel;
+				CPad::NewMouseControllerState.y += event.motion.yrel;
+			}
+			break;
+
+		case SDL_MOUSEBUTTONDOWN:
+		case SDL_MOUSEBUTTONUP:
+		{
+			bool isDown = (event.type == SDL_MOUSEBUTTONDOWN);
+			switch (event.button.button) {
+			case SDL_BUTTON_LEFT:
+				CPad::NewMouseControllerState.lmb = isDown;
+				break;
+			case SDL_BUTTON_RIGHT:
+				CPad::NewMouseControllerState.rmb = isDown;
+				break;
+			case SDL_BUTTON_MIDDLE:
+				CPad::NewMouseControllerState.mmb = isDown;
+				break;
+			case SDL_BUTTON_X1:
+				CPad::NewMouseControllerState.wheelUp = isDown;
+				break;
+			case SDL_BUTTON_X2:
+				CPad::NewMouseControllerState.wheelDown = isDown;
+				break;
+			}
+			break;
+		}
+
+		case SDL_MOUSEWHEEL:
+			if (event.wheel.y > 0)
+				CPad::NewMouseControllerState.wheelUp = true;
+			else if (event.wheel.y < 0)
+				CPad::NewMouseControllerState.wheelDown = true;
+			break;
 
             default:
                 break;

@@ -318,6 +318,16 @@ public class SDLActivity extends Activity implements View.OnSystemUiVisibilityCh
         Log.v(TAG, "Model: " + Build.MODEL);
         Log.v(TAG, "onCreate()");
         super.onCreate(savedInstanceState);
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
+            getWindow().setDecorFitsSystemWindows(false);
+            android.view.WindowInsetsController controller = getWindow().getInsetsController();
+            if (controller != null) {
+                controller.hide(android.view.WindowInsets.Type.statusBars() | android.view.WindowInsets.Type.navigationBars());
+                controller.setSystemBarsBehavior(
+                    android.view.WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+                );
+            }
+        }
 
         try {
             Thread.currentThread().setName("SDLActivity");
@@ -2110,6 +2120,17 @@ class SDLClipboardHandler implements
     @Override
     public void onPrimaryClipChanged() {
         SDLActivity.onNativeClipboardChanged();
+    }
+    @Override
+    public boolean onGenericMotionEvent(android.view.MotionEvent event) {
+        if (event.isFromSource(android.view.InputDevice.SOURCE_MOUSE)) {
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                if (mSurface != null && !mSurface.hasPointerCapture()) {
+                    mSurface.requestPointerCapture();
+                }
+            }
+        }
+        return super.onGenericMotionEvent(event);
     }
 }
 

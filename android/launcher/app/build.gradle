@@ -3,13 +3,12 @@ plugins {
 }
 
 android {
-
     namespace 'com.revc.game'
     compileSdk 35
 
     defaultConfig {
         applicationId "com.revc.game"
-        minSdk 24
+        minSdk 26
         targetSdk 35
         versionCode 1
         versionName "reVC-0.0.1"
@@ -19,7 +18,17 @@ android {
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
         ndk {
-            abiFilters "armeabi-v7a"/*, "arm64-v8a"*/
+            abiFilters "arm64-v8a"
+        }
+
+        externalNativeBuild {
+            cmake {
+                arguments "-DANDROID_STL=c++_static",
+                          "-DLIBRW_PLATFORM=GL3",
+                          "-DLIBRW_GL3_GFXLIB=GLES3",
+                          "-DANDROID_x32=0"
+                cppFlags "-Wl,-z,max-page-size=16384"
+            }
         }
     }
 
@@ -29,7 +38,7 @@ android {
 
             externalNativeBuild {
                 cmake {
-                    cppFlags '-O3', '-fvisibility=hidden'
+                    cppFlags '-O3', '-fvisibility=hidden', '-Wl,-z,max-page-size=16384'
                 }
             }
 
@@ -47,7 +56,7 @@ android {
 
             externalNativeBuild {
                 cmake {
-                    cppFlags '-g', '-DDEBUG'
+                    cppFlags '-g', '-DDEBUG', '-Wl,-z,max-page-size=16384'
                 }
             }
 
@@ -82,7 +91,12 @@ android {
 
     sourceSets {
         main {
-            jniLibs.srcDir 'jniLibs'
+            jniLibs.srcDirs = [
+                'jniLibs',
+                '../../../vendor/sdl2/libs/Android',
+                '../../../vendor/openal-soft/libs/Android',
+                '../../../vendor/mpg123/lib/Android'
+            ]
         }
     }
 }
