@@ -1292,7 +1292,6 @@ static void UpdateRelativeMouseMode()
 		}
 	}
 }
-
 void inputEventHandler() {
     SDL_Event event;
 
@@ -1323,8 +1322,27 @@ void inputEventHandler() {
 
             case SDL_MOUSEBUTTONDOWN:
             case SDL_MOUSEBUTTONUP:
-                mousebuttonCB(event.button.button, event.type == SDL_MOUSEBUTTONDOWN ? 1 : 0);
+            {
+                bool isDown = (event.type == SDL_MOUSEBUTTONDOWN);
+                switch (event.button.button) {
+                    case SDL_BUTTON_LEFT:
+                        CPad::NewMouseControllerState.LMB = isDown;
+                        break;
+                    case SDL_BUTTON_RIGHT:
+                        CPad::NewMouseControllerState.RMB = isDown;
+                        break;
+                    case SDL_BUTTON_MIDDLE:
+                        CPad::NewMouseControllerState.MMB = isDown;
+                        break;
+                    case SDL_BUTTON_X1:
+                        CPad::NewMouseControllerState.WHEELUP = isDown;
+                        break;
+                    case SDL_BUTTON_X2:
+                        CPad::NewMouseControllerState.WHEELDN = isDown;
+                        break;
+                }
                 break;
+            }
 
             case SDL_MOUSEWHEEL:
                 scrollCB(event.wheel.x, event.wheel.y);
