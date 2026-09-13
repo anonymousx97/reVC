@@ -247,8 +247,8 @@ psNativeTextureSupport(void)
 static void _psInitializeVibration() {}
 static void _psHandleVibration() {}
 
-/*
- *****************************************************************************
+/* 
+ ***************************************************************************** 
  */
 RwBool
 psInitialize(void)
@@ -1278,21 +1278,81 @@ windowIconifyCB(int iconified) {
     WindowIconified = !!iconified;
 }
 
+static void UpdateRelativeMouseMode()
+{
+	if (FrontEndMenuManager.m_bMenuActive || CTimer::GetIsPaused()) {
+		if (SDL_GetRelativeMouseMode()) {
+			SDL_SetRelativeMouseMode(SDL_FALSE);
+			SDL_ShowCursor(SDL_ENABLE);
+		}
+	} else {
+		if (!SDL_GetRelativeMouseMode()) {
+			SDL_SetRelativeMouseMode(SDL_TRUE);
+			SDL_ShowCursor(SDL_DISABLE);
+		}
+	}
+}
 void inputEventHandler() {
     SDL_Event event;
 
+    static bool bHintsInitialised = false;
+    if (!bHintsInitialised) {
+        SDL_SetHint(SDL_HINT_TOUCH_MOUSE_EVENTS, "0");
+        SDL_SetHint(SDL_HINT_MOUSE_TOUCH_EVENTS, "0");
+        SDL_SetHint(SDL_HINT_MOUSE_RELATIVE_MODE_WARP, "0");
+        bHintsInitialised = true;
+    }
+
+    UpdateRelativeMouseMode();
+
     if (SDL_PollEvent(&event)) {
         switch (event.type) {
-            case SDL_KEYDOWN:	/* fall-through */
+            case SDL_KEYDOWN:   /* fall-through */
             case SDL_KEYUP:
                 keypressCB(event.key.keysym.sym, event.type, 0);
                 break;
 
-            case SDL_MOUSEMOTION: cursorCB(event.motion.x, event.motion.y); break;
-            case SDL_MOUSEWHEEL: scrollCB(event.wheel.x, event.wheel.y); break;
+            case SDL_MOUSEMOTION:
+                if (SDL_GetRelativeMouseMode()) {
+                    CPad::NewMouseControllerState.x += event.motion.xrel;
+                    CPad::NewMouseControllerState.y += event.motion.yrel;
+                }
+                cursorCB(event.motion.x, event.motion.y);
+                break;
 
-            // note that SDL_CONTROLLERDEVICEADDED/REMOVED exists, but it did not work for me
-            case SDL_JOYDEVICEADDED:	/* fall-through */
+            case SDL_MOUSEBUTTONDOWN:
+            case SDL_MOUSEBUTTONUP:
+            {
+                bool isDown = (event.type == SDL_MOUSEBUTTONDOWN);
+                switch (event.button.button) {
+                    case SDL_BUTTON_LEFT:
+                        CPad::NewMouseControllerState.LMB = isDown;
+                        break;
+                    case SDL_BUTTON_RIGHT:
+                        CPad::NewMouseControllerState.RMB = isDown;
+                        break;
+                    case SDL_BUTTON_MIDDLE:
+                        CPad::NewMouseControllerState.MMB = isDown;
+                        break;
+                    case SDL_BUTTON_X1:
+                        CPad::NewMouseControllerState.WHEELUP = isDown;
+                        break;
+                    case SDL_BUTTON_X2:
+                        CPad::NewMouseControllerState.WHEELDN = isDown;
+                        break;
+                }
+                break;
+            }
+
+            case SDL_MOUSEWHEEL:
+                scrollCB(event.wheel.x, event.wheel.y);
+                if (event.wheel.y > 0)
+                    CPad::NewMouseControllerState.WHEELUP = true;
+                else if (event.wheel.y < 0)
+                    CPad::NewMouseControllerState.WHEELDN = true;
+                break;
+
+            case SDL_JOYDEVICEADDED:    /* fall-through */
             case SDL_JOYDEVICEREMOVED:
                 joysChangeCB(event.jdevice.which, event.type);
                 break;
@@ -1303,7 +1363,6 @@ void inputEventHandler() {
                     case SDL_WINDOWEVENT_LEAVE: cursorEnterCB(false); break;
                     case SDL_WINDOWEVENT_FOCUS_GAINED: windowFocusCB(true); break;
                     case SDL_WINDOWEVENT_FOCUS_LOST: windowFocusCB(false); break;
-                    // TODO should it be minimized/maximized/restored instead of shown/hidden?
                     case SDL_WINDOWEVENT_SHOWN: windowIconifyCB(false); break;
                     case SDL_WINDOWEVENT_HIDDEN: windowIconifyCB(true); break;
                 }
