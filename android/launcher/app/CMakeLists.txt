@@ -48,6 +48,17 @@ if(IS_DIRECTORY "${REVC_GAME_DIR}" AND EXISTS "${REVC_GAME_DIR}/CMakeLists.txt")
     message(" *  🚀 Initiating Game module build configuration...")
     message("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
     message(" ")
+    # Explicitly provide prebuilt vendor paths for Android
+    set(OPENAL_INCLUDE_DIR "${REVC_GAME_DIR}/vendor/openal-soft/include" CACHE PATH "OpenAL include directory" FORCE)
+    set(OPENAL_LIBRARY "${REVC_GAME_DIR}/vendor/openal-soft/libs/Android/${ANDROID_ABI}/libopenal.so" CACHE FILEPATH "OpenAL library" FORCE)
+
+    set(SDL2_INCLUDE_DIR "${REVC_GAME_DIR}/vendor/sdl2/include" CACHE PATH "SDL2 include directory" FORCE)
+    set(SDL2_LIBRARY "${REVC_GAME_DIR}/vendor/sdl2/libs/Android/${ANDROID_ABI}/libSDL2.so" CACHE FILEPATH "SDL2 library" FORCE)
+
+    set(MPG123_INCLUDE_DIR "${REVC_GAME_DIR}/vendor/mpg123/include" CACHE PATH "mpg123 include directory" FORCE)
+    set(MPG123_LIBRARY "${REVC_GAME_DIR}/vendor/mpg123/lib/Android/${ANDROID_ABI}/libmpg123.so" CACHE FILEPATH "mpg123 library" FORCE)
+    set(MPG123_LIBRARIES "${REVC_GAME_DIR}/vendor/mpg123/lib/Android/${ANDROID_ABI}/libmpg123.so" CACHE FILEPATH "mpg123 libraries" FORCE)
+
     add_subdirectory(${REVC_GAME_DIR} ${CMAKE_BINARY_DIR}/game_build)
 else()
     message(" *  ⚠️ Game source directory or CMakeLists.txt not found at: ${REVC_GAME_DIR}")
