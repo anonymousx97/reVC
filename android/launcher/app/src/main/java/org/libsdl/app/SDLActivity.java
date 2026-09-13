@@ -558,6 +558,18 @@ public class SDLActivity extends Activity implements View.OnSystemUiVisibilityCh
     }
 
     @Override
+    public boolean onGenericMotionEvent(android.view.MotionEvent event) {
+        if (event.isFromSource(android.view.InputDevice.SOURCE_MOUSE)) {
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                if (mSurface != null && !mSurface.hasPointerCapture()) {
+                    mSurface.requestPointerCapture();
+                }
+            }
+        }
+        return super.onGenericMotionEvent(event);
+    }
+
+    @Override
     public void onLowMemory() {
         Log.v(TAG, "onLowMemory()");
         super.onLowMemory();
@@ -2120,17 +2132,6 @@ class SDLClipboardHandler implements
     @Override
     public void onPrimaryClipChanged() {
         SDLActivity.onNativeClipboardChanged();
-    }
-    @Override
-    public boolean onGenericMotionEvent(android.view.MotionEvent event) {
-        if (event.isFromSource(android.view.InputDevice.SOURCE_MOUSE)) {
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-                if (mSurface != null && !mSurface.hasPointerCapture()) {
-                    mSurface.requestPointerCapture();
-                }
-            }
-        }
-        return super.onGenericMotionEvent(event);
     }
 }
 
