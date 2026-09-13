@@ -269,10 +269,14 @@ public class SDLActivity extends Activity implements View.OnSystemUiVisibilityCh
      */
     protected String[] getLibraries() {
         return new String[] {
-            "SDL2", "openal", "revc"
+            "syn123",
+            "out123",
+            "mpg123",
+            "openal",
+            "SDL2",
+            "revc"
         };
     }
-
     // Load the .so
     public void loadLibraries() {
        for (String lib : getLibraries()) {
