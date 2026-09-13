@@ -246,7 +246,7 @@ public class SDLActivity extends Activity implements View.OnSystemUiVisibilityCh
         if (libraries.length > 0) {
             library = "lib" + libraries[libraries.length - 1] + ".so";
         } else {
-            library = "librevc.so";
+            library = "libreVC.so";
         }
         return getContext().getApplicationInfo().nativeLibraryDir + "/" + library;
     }
@@ -274,7 +274,7 @@ public class SDLActivity extends Activity implements View.OnSystemUiVisibilityCh
             "mpg123",
             "openal",
             "SDL2",
-            "revc"
+            "reVC"
         };
     }
     // Load the .so

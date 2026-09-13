@@ -3,7 +3,9 @@
 //
 
 #if defined ANDROID
-
+#include <unistd.h>
+#include <sys/stat.h>
+#include <SDL_system.h>
 #include "AndroidMain.h"
 #include "JavaWrapper.h"
 #include "logger/log.h"
@@ -40,15 +42,18 @@ JAVA_WRAPPER Java_com_revc_game_core_REVC_setGamePath(JNIEnv *env, jobject obj, 
 }
 
 bool AndWrapper::InitLibraries() {
-	g_libREVC = Patch::FindLib("libreVC.so");
+    g_libREVC = Patch::FindLib("libreVC.so");
+    if (!g_libREVC) {
+        g_libREVC = Patch::FindLib("librevc.so");
+    }
 
-	if (!g_libREVC) {
-		Logger::Log("[ERROR]: Required libraries not found!");
-		return false;
-	}
+    if (!g_libREVC) {
+        Logger::Log("[ERROR]: Required libraries not found!");
+        return false;
+    }
 
-	Logger::Log("[INFO]: libreVC base: 0x%X", g_libREVC);
-	return true;
+    Logger::Log("[INFO]: libreVC base: 0x%lX", (unsigned long)g_libREVC);
+    return true;
 }
 
 void AndWrapper::TimeInitialize() {
@@ -415,18 +420,25 @@ void __fastcall OS_ApplicationEvent(OSEventType type, void *data)
 JNI_WRAPPER int InitializeGame() {
     debug("Initialize Game");
 
-    if (!AndWrapper::InitLibraries()) return NULL;
+    if (!AndWrapper::InitLibraries()) return 0;
+
+    // Automatically resolve and create game files directory
+    const char* extPath = SDL_AndroidGetExternalStoragePath();
+    if (extPath) {
+        mkdir(extPath, 0777);
+        chdir(extPath);
+        setenv("STORAGE_ROOT", extPath, 1);
+        StorageRootBuffer = getenv("STORAGE_ROOT");
+        Logger::Log("[INFO]: Storage Root set to: %s", StorageRootBuffer);
+    }
 
     int argc = 0;
     char* argv[1] = { nullptr };
 
     SDL_SetHint(SDL_HINT_ORIENTATIONS, "LandscapeLeft LandscapeRight");
-   // SDL_SetHint(SDL_HINT_TOUCH_MOUSE_EVENTS, "0");
 
     CrashHandler::SetupSignalHandlers();
 
     int result = SDL_main(argc, argv);
     return result;
 }
-
-#endif
