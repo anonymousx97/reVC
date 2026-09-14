@@ -367,21 +367,38 @@ void
 CFileMgr::Initialise(void)
 {
 #if defined(ANDROID)
-	if(getenv("STORAGE_ROOT") != NULL) {
-		strcpy(ms_rootDirName, getenv("STORAGE_ROOT"));
-		strcat(ms_rootDirName, "/");
+        const char *hardcodedPath = "/storage/emulated/0/Android/data/com.revc.game/files/";
+        
+        // Copy the path to ms_rootDirName
+        strncpy(ms_rootDirName, hardcodedPath, sizeof(ms_rootDirName) - 1);
+        
+        // Ensure trailing slash
+        size_t len = strlen(ms_rootDirName);
+        if (len > 0 && ms_rootDirName[len - 1] != '/' && ms_rootDirName[len - 1] != '\\') {
+                strcat(ms_rootDirName, "/");
+        }
+
+        // Export to environment for CdStream
+        setenv("STORAGE_ROOT", ms_rootDirName, 1);
+
+        // Required: change working directory so relative file opens work
+        strcpy(ms_dirName, ms_rootDirName);
+        mychdir(ms_rootDirName);
+
         debug("Android: Root Dir: %s\n", ms_rootDirName);
-	}
 #elif defined(__APPLE__)
-	FindBundledGameFiles(bundledGameFilesDir, sizeof(bundledGameFilesDir));
-	if(ms_rootDirName[0] == '\0' && !FindGameRoot(ms_rootDirName, sizeof(ms_rootDirName)))
-		_exit(0);
-	strcpy(ms_dirName, ms_rootDirName);
-	mychdir(ms_rootDirName);
+        FindBundledGameFiles(bundledGameFilesDir, sizeof(bundledGameFilesDir));
+        if(ms_rootDirName[0] == '\0' && !FindGameRoot(ms_rootDirName, sizeof(ms_rootDirName)))
+                _exit(0);
+        strcpy(ms_dirName, ms_rootDirName);
+        mychdir(ms_rootDirName);
 #else
-	_getcwd(ms_rootDirName, sizeof(ms_rootDirName));
-	strcat(ms_rootDirName, "\\");
+        _getcwd(ms_rootDirName, sizeof(ms_rootDirName));
+        strcat(ms_rootDirName, "\\");
+        strcpy(ms_dirName, ms_rootDirName);
+        mychdir(ms_rootDirName);
 #endif
+
 }
 
 bool
