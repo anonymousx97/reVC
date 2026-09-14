@@ -324,12 +324,15 @@ public class SDLActivity extends Activity implements View.OnSystemUiVisibilityCh
         super.onCreate(savedInstanceState);
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
             getWindow().setDecorFitsSystemWindows(false);
-            android.view.WindowInsetsController controller = getWindow().getInsetsController();
-            if (controller != null) {
-                controller.hide(android.view.WindowInsets.Type.statusBars() | android.view.WindowInsets.Type.navigationBars());
-                controller.setSystemBarsBehavior(
-                    android.view.WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-                );
+            android.view.View decorView = getWindow().getDecorView();
+            if (decorView != null) {
+                android.view.WindowInsetsController controller = decorView.getWindowInsetsController();
+                if (controller != null) {
+                    controller.hide(android.view.WindowInsets.Type.statusBars() | android.view.WindowInsets.Type.navigationBars());
+                    controller.setSystemBarsBehavior(
+                        android.view.WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+                    );
+                }
             }
         }
 
