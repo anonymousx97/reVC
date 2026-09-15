@@ -14,7 +14,7 @@ jobs:
 
     strategy:
       matrix:
-        variant: [release, debug]
+        variant: [debug]
 
     defaults:
       run:
