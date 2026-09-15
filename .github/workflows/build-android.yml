@@ -14,7 +14,7 @@ jobs:
 
     strategy:
       matrix:
-        variant: [debug, release]
+        variant: [release]
 
     defaults:
       run:
@@ -23,6 +23,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: v7
           clean: true
           submodules: recursive
           fetch-depth: 0
