@@ -56,10 +56,6 @@ jobs:
           restore-keys: |
             gradle-${{ runner.os }}-
 
-      - name: Clean build (manual only)
-        if: github.event_name == 'workflow_dispatch'
-        run: ./gradlew clean
-
       - name: Set assemble task name
         run: echo "ASSEMBLE_TASK=assemble${{ matrix.variant == 'debug' && 'Debug' || 'Release' }}" >> $GITHUB_ENV
 
