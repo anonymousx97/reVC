@@ -20,6 +20,7 @@ jobs:
       - name: Checkout repository & submodules
         uses: actions/checkout@v4
         with:
+          ref: v7
           clean: true
           submodules: recursive
           fetch-depth: 0
