@@ -219,27 +219,40 @@ CdStreamInitThread(void)
 #endif
 }
 
+
 void
 CdStreamInit(int32 numChannels)
 {
 	struct statvfs fsInfo;
-#if defined ANDROID
-	char imgPath[MAX_PATH];
-	if(StorageRootBuffer == NULL) {
-		char pwd[128];
-		getcwd(pwd, 128);
-		setenv("STORAGE_ROOT", pwd, 1);
-        debug("%s\n", pwd);
-	}
-	
-	debug("FILES %s\n", StorageRootBuffer);
-	strcpy(imgPath, StorageRootBuffer);
-	strcat(imgPath, "/models/gta3.img");
-    debug("%s\n", imgPath);
+#if defined(ANDROID)
+        char imgPath[MAX_PATH];
+        const char *StorageRootBuffer = getenv("STORAGE_ROOT");
 
-    if((statvfs(imgPath, &fsInfo)) < 0)
-#elifndef ANDROID
-    if((statvfs("models/gta3.img", &fsInfo)) < 0)
+        // If not set, fallback to the hardcoded package path
+        if(StorageRootBuffer == NULL || StorageRootBuffer[0] == '\0') {
+                StorageRootBuffer = "/storage/emulated/0/Android/data/com.revc.game/files/";
+                setenv("STORAGE_ROOT", StorageRootBuffer, 1);
+        }
+
+        debug("FILES %s\n", StorageRootBuffer);
+        
+        // Copy root path safely
+        strncpy(imgPath, StorageRootBuffer, sizeof(imgPath) - 1);
+        imgPath[sizeof(imgPath) - 1] = '\0';
+
+        // Check if root already has trailing slash before appending
+        size_t len = strlen(imgPath);
+        if (len > 0 && (imgPath[len - 1] == '/' || imgPath[len - 1] == '\\')) {
+                strncat(imgPath, "models/gta3.img", sizeof(imgPath) - len - 1);
+        } else {
+                strncat(imgPath, "/models/gta3.img", sizeof(imgPath) - len - 1);
+        }
+
+        debug("Final imgPath: %s\n", imgPath);
+
+        if((statvfs(imgPath, &fsInfo)) < 0)
+#else
+        if((statvfs("models/gta3.img", &fsInfo)) < 0)
 #endif
 	{
 		CDTRACE("can't get filesystem info");
