@@ -13,19 +13,23 @@
 
 extern uintptr_t g_libREVC;
 
-#if ANDROID_x32
+#if defined(__aarch64__)
 #define PRINT_CRASH_STATES(context) \
-	Logger::CrashLog("register states:"); \
-	Logger::CrashLog("r0: 0x%X, r1: 0x%X, r2: 0x%X, r3: 0x%X", (context)->uc_mcontext.arm_r0, (context)->uc_mcontext.arm_r1, (context)->uc_mcontext.arm_r2, (context)->uc_mcontext.arm_r3); \
-	Logger::CrashLog("r4: 0x%x, r5: 0x%x, r6: 0x%x, r7: 0x%x", (context)->uc_mcontext.arm_r4, (context)->uc_mcontext.arm_r5, (context)->uc_mcontext.arm_r6, (context)->uc_mcontext.arm_r7); \
-	Logger::CrashLog("r8: 0x%x, r9: 0x%x, sl: 0x%x, fp: 0x%x", (context)->uc_mcontext.arm_r8, (context)->uc_mcontext.arm_r9, (context)->uc_mcontext.arm_r10, (context)->uc_mcontext.arm_fp); \
-	Logger::CrashLog("ip: 0x%x, sp: 0x%x, lr: 0x%x, pc: 0x%x", (context)->uc_mcontext.arm_ip, (context)->uc_mcontext.arm_sp, (context)->uc_mcontext.arm_lr, (context)->uc_mcontext.arm_pc); \
-    Logger::CrashLog("1: libreVC.so + 0x%X", context->uc_mcontext.arm_pc - g_libREVC); \
-    Logger::CrashLog("2: libreVC.so + 0x%X", context->uc_mcontext.arm_lr - g_libREVC);
+    Logger::CrashLog("1: libreVC.so + 0x%llx", (unsigned long long)(context->uc_mcontext.pc - g_libREVC)); \
+    Logger::CrashLog("2: libreVC.so + 0x%llx", (unsigned long long)(context->uc_mcontext.regs[30] - g_libREVC));
+#elif defined(__arm__)
+#define PRINT_CRASH_STATES(context) \
+    Logger::CrashLog("1: libreVC.so + 0x%lx", (unsigned long)(context->uc_mcontext.arm_pc - g_libREVC)); \
+    Logger::CrashLog("2: libreVC.so + 0x%lx", (unsigned long)(context->uc_mcontext.arm_lr - g_libREVC));
+#elif defined(__x86_64__)
+#define PRINT_CRASH_STATES(context) \
+    Logger::CrashLog("1: libreVC.so + 0x%llx", (unsigned long long)(context->uc_mcontext.gregs[REG_RIP] - g_libREVC));
+#elif defined(__i386__)
+#define PRINT_CRASH_STATES(context) \
+    Logger::CrashLog("1: libreVC.so + 0x%lx", (unsigned long)(context->uc_mcontext.gregs[REG_EIP] - g_libREVC));
 #else
 #define PRINT_CRASH_STATES(context) \
-    Logger::CrashLog("1: libreVC.so + 0x%llx", context->uc_mcontext.pc - g_libREVC); \
-    Logger::CrashLog("2: libreVC.so + 0x%llx", context->uc_mcontext.regs[30] - g_libREVC);
+    Logger::CrashLog("Crash states printing not implemented for this architecture");
 #endif
 
 class CStackTrace
